@@ -1,0 +1,14 @@
+${yandex_compute_name_for_app}:
+  hosts:
+    ${app_ip}
+  vars:
+    logging_ip: ${private_logging_ip}
+${yandex_compute_name_for_logging}:
+  hosts:
+    ${logging_ip}
+${yandex_compute_name_for_monitoring}:
+  hosts:
+    ${monitoring_ip}
+  vars:
+    app_ip: ${private_app_ip}
+    logging_ip: ${private_logging_ip}

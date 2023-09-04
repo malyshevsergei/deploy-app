@@ -1,0 +1,64 @@
+---
+#tasks file for install_nginx
+- name: Update apt cache and make sure nginx is installed
+  apt:
+    name: "{{ item }}"
+    update_cache: true
+  with_items: 
+    - nginx
+    - python3-certbot-nginx
+
+- name: Create and install certs for app
+  ansible.builtin.shell:
+    cmd: certbot --nginx --agree-tos -n -d app.{{ ansible_ssh_host }}.sslip.io --register-unsafely-without-email
+  when: group_names==["app"]
+  notify: Restart nginx
+
+- name: Create config file for nginx
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: admin
+    group: admin
+  loop: 
+    - { src: october.conf, dest: /etc/nginx/sites-available/default }
+    - { src: nginx.conf, dest: /etc/nginx/nginx.conf }
+  when: group_names==["app"]
+
+- name: Create and install certs for logging
+  ansible.builtin.shell:
+    cmd: certbot --nginx --agree-tos -n -d logging.{{ ansible_ssh_host }}.sslip.io --register-unsafely-without-email
+  when: group_names==["logging"]
+  notify: Restart nginx
+
+- name: Create config file for logging
+  ansible.builtin.template:
+    src: logging.conf
+    dest: /etc/nginx/sites-available/default
+    owner: admin
+    group: admin
+  when: group_names==["logging"]
+
+- name: Create and install certs for monitoring
+  ansible.builtin.shell:
+    cmd: certbot --nginx --agree-tos -n -d monitoring.{{ ansible_ssh_host }}.sslip.io --register-unsafely-without-email
+  when: group_names==["monitoring"]
+  notify: Restart nginx
+
+- name: Create config file for monitoring
+  ansible.builtin.template:
+    src: monitoring.conf
+    dest: /etc/nginx/sites-available/default
+    owner: admin
+    group: admin
+  when: group_names==["monitoring"]
+
+- name: Touch a file, using symbolic modes to set the permissions (equivalent to 0644)
+  ansible.builtin.file:
+    path: /var/log/nginx/{{ item }}
+    owner: www-data
+    group: adm
+    mode: u=rw,g=r,o=r
+  loop: 
+    - access.log
+    - error.log

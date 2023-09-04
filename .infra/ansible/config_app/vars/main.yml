@@ -1,0 +1,7 @@
+gitlab_runner_coordinator_url: 'https://gitlab.rebrainme.com/'
+gitlab_runner_registration_token: "{{ gitlab_ci_token_for_worker }}"
+gitlab_runner_runners:
+  - name: app
+    executor: shell
+    tags:
+      - app

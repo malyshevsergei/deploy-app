@@ -1,0 +1,35 @@
+version: "3.7"
+services:
+  prometheus:
+    image: bitnami/prometheus:2.33.0
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      demonetwork:
+        aliases:
+          - prometheus
+
+  grafana:
+    image: grafana/grafana-oss
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - GF_PATHS_CONFIG=/etc/grafana/custom.ini
+    volumes:
+      - ./config/grafana/custom.ini:/etc/grafana/custom.ini
+      - ./config/grafana/provisioning/:/etc/grafana/provisioning/
+      - type: bind
+        source: ./config/grafana/dashboard.json
+        target: /var/lib/grafana/dashboards/curity/idsvr-dashboard.json
+    links:
+      - prometheus
+    networks:
+      demonetwork:
+        aliases:
+          - grafana
+
+networks:
+  demonetwork:
+    name: metrics-demo-net

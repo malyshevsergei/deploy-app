@@ -1,0 +1,35 @@
+---
+# tasks file for install_monitoring
+- name: Create directory for docker-compose file
+  ansible.builtin.file:
+    path: "{{ item }}"
+    owner: admin
+    group: admin
+    state: directory
+  with_items:
+    - /home/admin/monitoring
+  become: true
+
+- name: Copy config directory
+  ansible.posix.synchronize:
+    src: config
+    dest: /home/admin/monitoring
+  become: true
+
+- name: Create config and service files
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: admin
+    group: admin
+    mode: '0644'
+  loop:
+    - { src: td-agent.conf, dest: /etc/td-agent/td-agent.conf }
+    - { src: docker-compose.yml, dest: /home/admin/monitoring/docker-compose.yml }
+    - { src: prometheus_config, dest: /home/admin/monitoring/config/prometheus/prometheus.yml }
+
+- name: Create and start services
+  ansible.builtin.shell: docker-compose up -d
+  args:
+    chdir: /home/admin/monitoring
+    executable: /bin/bash

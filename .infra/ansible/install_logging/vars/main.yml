@@ -1,0 +1,21 @@
+docker_edition: 'ce'
+docker_packages:
+    - "docker-{{ docker_edition }}"
+    - "docker-{{ docker_edition }}-cli"
+    - "docker-{{ docker_edition }}-rootless-extras"
+docker_packages_state: present
+
+docker_install_compose: true
+docker_compose_version: "1.26.0"
+docker_compose_arch: "{{ ansible_architecture }}"
+docker_compose_path: /usr/local/bin/docker-compose
+
+fluentd_version: 3
+fluentd_service_name: td-agent
+fluentd_service_state: started
+fluentd_service_enabled: true
+
+fluentd_plugins:
+  - name: fluent-plugin-gelf
+    version: "0.2.6"
+    state: present

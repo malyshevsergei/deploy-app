@@ -1,0 +1,43 @@
+stages:
+  - lint
+  - deploy
+
+lint-test-job:   # This job also runs in the test stage.
+  stage: lint    # It can run at the same time as unit-test-job (in parallel).
+  tags:
+    - app
+  script:
+    - |
+      cd october
+      wget https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar
+      wget https://squizlabs.github.io/PHP_CodeSniffer/phpcbf.phar
+      php phpcs.phar
+      php phpcbf.phar
+  allow_failure: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+change_link:
+  stage: deploy
+  script:
+    - |
+      date=$(date +"%d%m%Y")
+      n=0
+      # Increment $N as long as a directory with that name exists
+      while [ -d "/opt/october/${date}-${n}" ] ; do
+          echo $n
+          n=$(($n+1))
+      done
+      NEW_DIR=${date}-${n}
+      mkdir "/opt/october/${NEW_DIR}"
+      cp -r ./october /opt/october/${NEW_DIR}
+      cd /opt/october/
+      rm -r /opt/october/current || echo remove is not needed
+      ln -s /opt/october/${NEW_DIR}/ current
+      
+      cd /opt/october/current/october
+      composer install
+      php artisan october:install --no-interaction
+  allow_failure: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"

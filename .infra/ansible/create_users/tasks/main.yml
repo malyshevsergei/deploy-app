@@ -1,0 +1,53 @@
+---
+# tasks file for create_users
+- name: Add the users
+  ansible.builtin.user:
+    name: "{{ item }}"
+    append: true
+    groups: root, sudo
+    state: present
+    shell: /bin/bash
+  with_items: 
+    - 'cicd'
+    - 'app'
+    - 'admin'
+
+- name: Create ssh directory
+  ansible.builtin.file:
+    path: /home/{{ item }}/.ssh
+    state: directory
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: '0700'
+  with_items:
+    - 'cicd'
+    - 'app'
+    - 'admin'
+
+- name: Copy ssh_authorized_key
+  ansible.builtin.copy:
+    src: authorized_keys
+    dest: /home/{{ item }}/.ssh/authorized_keys
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: '0600'
+  with_items:
+    - 'cicd'
+    - 'app'
+    - 'admin'
+
+- name: Write to authorized_keys
+  ansible.builtin.copy:
+    content: "{{ autorized_key }}"
+    dest: "/home/{{ item }}/.ssh/authorized_keys"
+  with_items:
+    - 'cicd'
+    - 'app'
+    - 'admin'
+
+- name: Update apt cache and install packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    update_cache: true
+  with_items:
+    - acl

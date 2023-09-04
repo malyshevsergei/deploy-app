@@ -1,0 +1,8 @@
+---
+# vars file for install_nginx
+certbot_create_if_missing: true
+certbot_auto_renew_user: admin
+certbot_auto_renew_day: "30"
+certbot_admin_email: malyshev.s.a@ya.ru
+certbot_create_standalone_stop_services:
+  - nginx

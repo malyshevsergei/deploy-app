@@ -1,0 +1,29 @@
+---
+# tasks file for install_graylog
+- name: Create directory for docker-compose file
+  ansible.builtin.file:
+    path: /home/admin/graylog
+    owner: admin
+    group: admin
+    state: directory
+  become: true
+
+- name: Create config and service files
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: admin
+    group: admin
+    mode: '0644'
+  loop:
+    - { src: docker-compose.yml, dest: /home/admin/graylog/docker-compose.yml }
+    - { src: .env.j2, dest: /home/admin/graylog/.env }
+    - { src: td-agent.conf, dest: /etc/td-agent/td-agent.conf }
+  notify:
+   - Restart fluentd
+
+- name: Create and start services
+  ansible.builtin.shell: docker-compose up -d
+  args:
+    chdir: /home/admin/graylog
+    executable: /bin/bash

@@ -1,0 +1,28 @@
+- hosts: all
+  remote_user: ubuntu
+  become: true
+  pre_tasks:
+    - name: include_vars from vault
+      ansible.builtin.include_vars:
+        file: vaults/vault.yml
+
+  roles:
+    - create_users
+    - role: config_app
+      when: group_names==["app"]
+
+    - install_nginx
+
+    - role: install_php_and_composer
+      when: group_names==["app"]
+
+    - role: install_postgresql
+      when: group_names==["app"]
+
+    - iptables
+
+    - role: install_logging
+      when: group_names == ["logging"]
+
+    - role: install_monitoring
+      when: group_names == ["monitoring"]
